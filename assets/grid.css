@@ -1,0 +1,4 @@
+.grid-box { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.grid-box:hover { transform: translateY(-2px); }
+.grid-box .most-picked { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0f6b4f; border: 1px solid #0f6b4f; border-radius: 999px; padding: .15rem .5rem; }
+iframe[src*="docs.google.com/forms"] { border: 1px solid rgba(26,29,33,.1); border-radius: .5rem; background: #fff; }
