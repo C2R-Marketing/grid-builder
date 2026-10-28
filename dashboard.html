@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tracking Dashboard | C2R Marketing Grids</title>
+<meta name="description" content="Grid tracking: views, clicks, and CTR per box, on this device. Export CSV.">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+  @theme { --color-ink: #1a1d21; --color-paper: #faf8f4; --color-accent: #0f6b4f; }
+</style>
+<link rel="stylesheet" href="/grid-builder/assets/grid.css">
+</head>
+<body class="bg-paper text-ink font-sans antialiased">
+<nav class="sticky top-0 z-10 border-b border-ink/10 bg-paper/90 backdrop-blur">
+  <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+    <a href="/grid-builder/" class="font-semibold">C2R Marketing · Grids</a>
+    <div class="flex items-center gap-6 text-sm font-medium">
+      <a href="/grid-builder/" class="hidden hover:text-accent sm:inline">All grids</a>
+      <a href="/grid-builder/builder.html" class="hidden hover:text-accent sm:inline">Builder</a>
+    </div>
+  </div>
+</nav>
+<header class="border-b border-ink/10 bg-accent/10">
+  <div class="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-20 sm:py-24">
+    <h1 class="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">Tracking dashboard</h1>
+    <p class="max-w-xl text-xl leading-relaxed text-ink/70">Views, clicks, and click-through rate per box — counted in this browser. The box people pick most tells you what the audience actually wants; move it to the top. Cross-device clicks are covered by the UTM tags on every outbound link (utm_source=grid, utm_medium=grid name, utm_campaign=box).</p>
+  </div>
+</header>
+<section class="border-b border-ink/10 bg-paper">
+  <div class="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-16">
+    <div class="flex flex-wrap gap-3">
+      <button id="exportCsv" class="rounded-lg bg-accent px-6 py-3 font-medium text-white transition hover:opacity-90">Export CSV</button>
+      <button id="resetAll" class="rounded-lg border border-ink/20 px-6 py-3 font-medium transition hover:border-accent hover:text-accent">Reset all counts</button>
+      <span id="status" class="self-center text-sm text-ink/70"></span>
+    </div>
+    <div id="tables" class="flex flex-col gap-10"></div>
+    <p class="text-sm text-ink/50">No data yet? Open a grid page first — a view is counted on every load, a click on every box picked. Counts live in this browser's local storage only; clearing browser data clears them. That is the $0 trade: real per-visitor counts with no backend, no cookies, no spend.</p>
+  </div>
+</section>
+<footer class="border-t border-ink/10 bg-paper">
+  <div class="mx-auto max-w-5xl px-6 py-8 text-sm text-ink/50">C2R Marketing, LLC · 2026 · Grids: choose your path.</div>
+</footer>
+<script src="/grid-builder/assets/grid.js"></script>
+<script>
+function render() {
+  const data = window.GridStats.readAll();
+  const wrap = document.getElementById("tables");
+  const grids = Object.keys(data).sort();
+  if (!grids.length) { wrap.innerHTML = '<p class="text-ink/70">No grid visits recorded in this browser yet.</p>'; return; }
+  wrap.innerHTML = grids.map(g => {
+    const d = data[g];
+    const rows = d.boxes.map(b => {
+      const ctr = d.views ? (100 * b.clicks / d.views).toFixed(1) + "%" : "—";
+      return "<tr class='border-t border-ink/10'><td class='py-2 pr-4'>" + b.box + "</td><td class='py-2 pr-4 text-right'>" + b.clicks + "</td><td class='py-2 text-right'>" + ctr + "</td></tr>";
+    }).join("");
+    return "<div><h2 class='font-semibold text-lg'>" + g + " — " + d.views + " views</h2>" +
+      "<table class='mt-2 w-full text-left text-sm'><thead><tr class='text-ink/50'><th class='py-2 pr-4'>Box</th><th class='py-2 pr-4 text-right'>Clicks</th><th class='py-2 text-right'>CTR</th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+  }).join("");
+}
+document.getElementById("exportCsv").addEventListener("click", () => {
+  const data = window.GridStats.readAll();
+  let csv = "grid,box,views,clicks,ctr_pct\n";
+  Object.keys(data).sort().forEach(g => {
+    const d = data[g];
+    d.boxes.forEach(b => { csv += [g, b.box, d.views, b.clicks, d.views ? (100 * b.clicks / d.views).toFixed(1) : ""].join(",") + "\n"; });
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = "grid-tracking.csv";
+  a.click();
+  document.getElementById("status").textContent = "CSV downloaded.";
+});
+document.getElementById("resetAll").addEventListener("click", () => {
+  if (!confirm("Reset all grid counts in this browser?")) return;
+  window.GridStats.resetAll();
+  render();
+  document.getElementById("status").textContent = "Counts reset.";
+});
+render();
+</script>
+</body>
+</html>
