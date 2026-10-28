@@ -1,0 +1,23 @@
+# Grid Builder — llms.txt
+
+## About
+A free nine-box choose-your-path tool from C2R Marketing. Pick a box, get the straight answer: free tips, the $147 AI Visibility Audit, books, and tools. No signup to browse; email capture is optional.
+
+## The four grids
+- Churches — what AI says about your church: https://c2r-marketing.github.io/grid-builder/grids/churches/
+- Dentists — what AI says about your practice: https://c2r-marketing.github.io/grid-builder/grids/dentists/
+- Realtors — what AI says about your listings: https://c2r-marketing.github.io/grid-builder/grids/realtors/
+- NMV readers — the New Messianic Version Bible: https://c2r-marketing.github.io/grid-builder/grids/nmv/
+
+## The builder
+Build your own nine-box grid, free, in the browser — suggestions, live preview, export standalone HTML: https://c2r-marketing.github.io/grid-builder/builder.html
+Click tracking dashboard: https://c2r-marketing.github.io/grid-builder/dashboard.html
+
+## Offers
+- AI Visibility Audit for churches, dentists, and realtors — $147 one time: https://c2rmarketing.com/audit/
+- AI Visibility Playbook — $14: https://c2rmarketing.com/go/ai-playbook/
+- The New Messianic Version Bible: https://nmvbible.org/
+
+## Contact
+- Email: eli@c2rmarketing.com
+- Home: https://c2rmarketing.com/
