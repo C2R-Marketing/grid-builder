@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grid Builder | C2R Marketing Grids</title>
+<meta name="description" content="Build a 9-box choose-your-path grid in minutes: topic, nine titles, nine destinations, tracking on every box. Free, no account.">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+  @theme { --color-ink: #1a1d21; --color-paper: #faf8f4; --color-accent: #0f6b4f; }
+</style>
+<link rel="stylesheet" href="/grid-builder/assets/grid.css">
+</head>
+<body class="bg-paper text-ink font-sans antialiased">
+<nav class="sticky top-0 z-10 border-b border-ink/10 bg-paper/90 backdrop-blur">
+  <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+    <a href="/grid-builder/" class="font-semibold">C2R Marketing · Grids</a>
+    <div class="flex items-center gap-6 text-sm font-medium">
+      <a href="/grid-builder/" class="hidden hover:text-accent sm:inline">All grids</a>
+      <a href="/grid-builder/dashboard.html" class="hidden hover:text-accent sm:inline">Tracking</a>
+    </div>
+  </div>
+</nav>
+<header class="border-b border-ink/10 bg-accent/10">
+  <div class="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-20 sm:py-24">
+    <h1 class="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">Build a 9-box grid</h1>
+    <p class="max-w-xl text-xl leading-relaxed text-ink/70">Type a topic, get nine suggested titles from the most-searched question patterns, point each box at its destination, and export a standalone page with tracking on every box. Free, no account, nothing leaves your browser until you export.</p>
+  </div>
+</header>
+<section class="border-b border-ink/10 bg-paper">
+  <div class="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-16">
+    <div class="flex flex-col gap-2">
+      <label for="topic" class="font-semibold">1. Topic</label>
+      <div class="flex flex-wrap gap-3">
+        <input id="topic" type="text" placeholder="e.g. churches, dentists, realtors, NMV Bible" class="flex-1 min-w-64 rounded-lg border border-ink/20 bg-white px-4 py-3">
+        <button id="suggest" class="rounded-lg bg-accent px-6 py-3 font-medium text-white transition hover:opacity-90">Suggest 9 titles</button>
+      </div>
+      <p class="text-sm text-ink/50">Suggestions come from a built-in bank of top-searched question patterns for that topic — no paid AI call, $0. Edit every title before you export.</p>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="font-semibold">2. The nine boxes</label>
+      <div id="editor" class="flex flex-col gap-3"></div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="font-semibold">3. Live preview</label>
+      <div id="preview" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <button id="save" class="rounded-lg bg-accent px-6 py-3 font-medium text-white transition hover:opacity-90">Save grid</button>
+      <button id="export" class="rounded-lg border border-ink/20 px-6 py-3 font-medium transition hover:border-accent hover:text-accent">Export standalone HTML</button>
+      <button id="copylink" class="rounded-lg border border-ink/20 px-6 py-3 font-medium transition hover:border-accent hover:text-accent">Copy shareable link</button>
+      <button id="copyjson" class="rounded-lg border border-ink/20 px-6 py-3 font-medium transition hover:border-accent hover:text-accent">Copy grid JSON</button>
+      <span id="status" class="self-center text-sm text-ink/70"></span>
+    </div>
+  </div>
+</section>
+<footer class="border-t border-ink/10 bg-paper">
+  <div class="mx-auto max-w-5xl px-6 py-8 text-sm text-ink/50">C2R Marketing, LLC · 2026 · Grids: choose your path.</div>
+</footer>
+<script>
+const BANKS = {
+  churches: ["What does ChatGPT say about my church?", "\u201cChurch near me\u201d — will AI recommend us?", "Google Business Profile for churches", "Get cited in Google AI Overviews", "The free llms.txt fix (10 minutes)", "Google reviews that bring visitors", "Sermon transcripts AI can actually read", "What to expect on a first visit", "See it all — the full $147 audit"],
+  dentists: ["\u201cDentist near me\u201d — will AI recommend us?", "What does ChatGPT say about my practice?", "Emergency dentist searches", "Dental implants — what AI tells patients", "Teeth whitening searches", "Google Business Profile for dentists", "Reviews that fill chairs", "The free llms.txt fix for dentists (10 minutes)", "Full $147 AI Visibility Audit"],
+  realtors: ["How do I get more listings?", "What does ChatGPT say about me as an agent?", "Google Business Profile for realtors", "Past clients who forgot me", "Expired listings — get found first", "Zillow leads vs owning your leads", "YouTube + AI search for realtors", "Do buyers find me on AI search?", "Full $147 AI Visibility Audit"],
+  bible: ["What Bible version do Messianic Jews read?", "Get the New Messianic Version Bible", "Where is Jesus in the Old Testament?", "Who is the God of the Hebrew Bible?", "Read the NMV free on YouVersion", "NMV ebook — $17.99 instant PDF", "Large-print 4-volume set", "Free guide to using the NMV", "Fund the NMV 2nd edition"],
+  generic: ["What does AI say about my business?", "How do I get found on Google?", "How do I get found on ChatGPT?", "Google Business Profile — the 10-minute fix", "The free llms.txt fix (10 minutes)", "Reviews that bring customers", "What do I offer, in plain English?", "Questions first? Talk to a human", "See the full offer"]
+};
+const ICONS = ["🔍","📍","🏢","🤖","📄","⭐","🎙️","👋","✅"];
+let boxes = [];
+function bankFor(topic) {
+  const t = (topic || "").toLowerCase();
+  if (t.includes("church") || t.includes("ministry")) return BANKS.churches;
+  if (t.includes("dent")) return BANKS.dentists;
+  if (t.includes("realt") || t.includes("real estate") || t.includes("agent")) return BANKS.realtors;
+  if (t.includes("bible") || t.includes("nmv") || t.includes("messianic") || t.includes("torah")) return BANKS.bible;
+  return BANKS.generic;
+}
+function renderEditor() {
+  const ed = document.getElementById("editor");
+  ed.innerHTML = "";
+  boxes.forEach((b, i) => {
+    const row = document.createElement("div");
+    row.className = "grid gap-2 rounded-lg border border-ink/10 bg-white p-4 sm:grid-cols-[3rem_1fr_1fr_1fr]";
+    row.innerHTML =
+      '<input data-f="icon" data-i="' + i + '" value="' + b.icon + '" aria-label="Icon" class="rounded border border-ink/20 px-2 py-2 text-center">' +
+      '<input data-f="title" data-i="' + i + '" value="' + b.title.replace(/"/g, "&quot;") + '" aria-label="Title" class="rounded border border-ink/20 px-3 py-2">' +
+      '<input data-f="sub" data-i="' + i + '" value="' + (b.sub || "").replace(/"/g, "&quot;") + '" aria-label="Subtitle" placeholder="One-line subtitle" class="rounded border border-ink/20 px-3 py-2">' +
+      '<input data-f="url" data-i="' + i + '" value="' + (b.url || "").replace(/"/g, "&quot;") + '" aria-label="Destination URL" placeholder="https://… destination" class="rounded border border-ink/20 px-3 py-2">';
+    ed.appendChild(row);
+  });
+  ed.querySelectorAll("input").forEach(inp => inp.addEventListener("input", e => {
+    boxes[+e.target.dataset.i][e.target.dataset.f] = e.target.value;
+    renderPreview();
+  }));
+  renderPreview();
+}
+function renderPreview() {
+  const pv = document.getElementById("preview");
+  pv.innerHTML = boxes.map(b =>
+    '<div class="flex flex-col gap-2 rounded-lg border border-ink/10 bg-white p-5"><span class="text-3xl">' + b.icon + '</span>' +
+    '<span class="font-semibold leading-snug">' + escapeHtml(b.title) + '</span>' +
+    '<span class="text-sm text-ink/70">' + escapeHtml(b.sub || "") + '</span></div>').join("");
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+document.getElementById("suggest").addEventListener("click", () => {
+  const titles = bankFor(document.getElementById("topic").value);
+  boxes = titles.map((t, i) => ({ icon: ICONS[i], title: t, sub: "", url: "" }));
+  renderEditor();
+  document.getElementById("status").textContent = "9 titles suggested — edit them, then export.";
+});
+document.getElementById("save").addEventListener("click", () => {
+  try { localStorage.setItem("gridbuilder:draft", JSON.stringify({ topic: document.getElementById("topic").value, boxes })); document.getElementById("status").textContent = "Saved in this browser."; }
+  catch (e) { document.getElementById("status").textContent = "Could not save in this browser."; }
+});
+document.getElementById("copyjson").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(JSON.stringify({ topic: document.getElementById("topic").value, boxes }, null, 2)); document.getElementById("status").textContent = "Grid JSON copied."; }
+  catch (e) { document.getElementById("status").textContent = "Copy failed — select and copy manually."; }
+});
+document.getElementById("copylink").addEventListener("click", async () => {
+  const cfg = btoa(unescape(encodeURIComponent(JSON.stringify({ topic: document.getElementById("topic").value, boxes }))));
+  const url = location.origin + location.pathname + "#config=" + cfg;
+  try { await navigator.clipboard.writeText(url); document.getElementById("status").textContent = "Shareable link copied — it opens this grid in the builder."; }
+  catch (e) { document.getElementById("status").textContent = url; }
+});
+document.getElementById("export").addEventListener("click", () => {
+  const topic = document.getElementById("topic").value || "My grid";
+  const cards = boxes.map((b, i) =>
+    '      <a href="' + escapeHtml(b.url || "#") + '" data-box="box-' + (i + 1) + '" class="grid-box group flex flex-col gap-2 rounded-lg border border-ink/10 bg-white p-5 transition hover:border-accent hover:shadow-md">' +
+    '<span class="text-3xl">' + b.icon + '</span><span class="font-semibold leading-snug group-hover:text-accent">' + escapeHtml(b.title) + '</span>' +
+    '<span class="text-sm text-ink/70">' + escapeHtml(b.sub || "") + '</span><span class="mt-auto pt-2 text-sm font-medium text-accent">Choose this path →</span></a>').join("\n");
+  const doc = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>' + escapeHtml(topic) + ' — Choose Your Path</title>\n<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></scr' + 'ipt>\n</head>\n<body class="bg-[#faf8f4] text-[#1a1d21] font-sans antialiased">\n<header class="bg-[#0f6b4f]/10 border-b border-black/10"><div class="mx-auto max-w-5xl px-6 py-20"><h1 class="text-4xl font-bold">' + escapeHtml(topic) + '</h1><p class="mt-4 text-xl text-black/70">Pick one box. Get the straight answer.</p></div></header>\n<section class="bg-[#faf8f4]"><div class="mx-auto max-w-5xl px-6 py-16"><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-grid="exported">\n' + cards + '\n</div></div></section>\n<scr' + 'ipt src="/grid-builder/assets/grid.js"></scr' + 'ipt>\n</body>\n</html>\n';
+  const blob = new Blob([doc], { type: "text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "grid-" + topic.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".html";
+  a.click();
+  document.getElementById("status").textContent = "Standalone grid HTML downloaded — tracking included via grid.js.";
+});
+(function init() {
+  try {
+    if (location.hash.startsWith("#config=")) {
+      const cfg = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(8)))));
+      document.getElementById("topic").value = cfg.topic || "";
+      boxes = cfg.boxes || [];
+      renderEditor();
+      document.getElementById("status").textContent = "Grid loaded from shared link.";
+      return;
+    }
+    const saved = JSON.parse(localStorage.getItem("gridbuilder:draft") || "null");
+    if (saved && saved.boxes) { document.getElementById("topic").value = saved.topic || ""; boxes = saved.boxes; }
+    else { boxes = bankFor("").map((t, i) => ({ icon: ICONS[i], title: t, sub: "", url: "" })); }
+  } catch (e) { boxes = bankFor("").map((t, i) => ({ icon: ICONS[i], title: t, sub: "", url: "" })); }
+  renderEditor();
+})();
+</script>
+</body>
+</html>
